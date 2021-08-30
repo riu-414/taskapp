@@ -64,7 +64,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
-                        <outlet property="tableView" destination="bpW-z8-4mm" id="C9a-32-4UP"/>
+                        <outlet property="tableView" destination="bpW-z8-4mm" id="hrq-ct-UsR"/>
                         <segue destination="NlE-en-Hsx" kind="show" identifier="cellSegue" id="4pr-XS-hMe"/>
                     </connections>
                 </viewController>
