@@ -7,10 +7,12 @@
 
 import UIKit
 import RealmSwift
+import UserNotifications
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
     
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var categorySearchBar: UISearchBar!
     
     //Realmインスタンスを取得する
     let realm = try! Realm()
@@ -18,7 +20,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     //DB内のタスクが格納されているリスト
     //日付の近い順でソート：昇順
     //以降内容をアップデートするとリスト内は自動的に更新される
-    var taskArray = try! Realm().odjects(Task.self).sorted(byKeyPath: "date", ascending: true)
+    var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: true)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +28,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         tableView.delegate = self
         tableView.dataSource = self
+        categorySearchBar.delegate = self
         
     }
 
@@ -73,7 +76,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if editingStyle == .delete {
             
             //削除するタスクを取得
-            let task = self.taskArray[indexPath.roe]
+            let task = self.taskArray[indexPath.row]
             
             //ローカル通知をキャンセル
             let center = UNUserNotificationCenter.current()
@@ -86,10 +89,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
             
             //未通知のローカル通知一覧をログ出力
-            center.getPendingNotificationReqests { (requests: [UNNotificationRequest]) in
+            center.getPendingNotificationRequests { (requests: [UNNotificationRequest]) in
                 for request in requests {
                     print("/---------------")
-                    pront(request)
+                    print(request)
                     print("/---------------")
                     
                 }
@@ -102,11 +105,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let inputViewController:InputViewController = segue.destination as! InputViewController
         
         if segue.identifier == "cellSegue" {
-            let indexPath = self.tableView.indexPathForSelectedRowinputViewController.task = taskArray[indexPath!.row]
+            let indexPath = self.tableView.indexPathForSelectedRow
+            inputViewController.task = taskArray[indexPath!.row]
         } else {
             let task = Task()
             
-            let allTasks = reslm.objects(Task.self)
+            let allTasks = realm.objects(Task.self)
             if allTasks.count != 0 {
                 task.id = allTasks.max(ofProperty: "id")! + 1
                 
@@ -122,6 +126,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.reloadData()
     }
     
-
+    //カテゴリの文字検索
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchText == "" {
+            taskArray = realm.objects(Task.self).sorted(byKeyPath: "date", ascending: false)
+        } else {
+            let predicate = NSPredicate(format: "category contains [c] %@", searchText)
+            taskArray = realm.objects(Task.self).filter(predicate).sorted(byKeyPath:"date", ascending: false)
+        }
+        tableView.reloadData()
+    }
+    
 }
 

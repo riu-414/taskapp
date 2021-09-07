@@ -14,6 +14,7 @@ class InputViewController: UIViewController {
     @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var contentsTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
+    @IBOutlet weak var categoryTextField: UITextField!
     
     let realm = try! Realm()
     var task: Task!
@@ -30,6 +31,7 @@ class InputViewController: UIViewController {
         titleTextField.text = task.title
         contentsTextView.text = task.contents
         datePicker.date = task.date
+        categoryTextField.text = task.category
         
     }
     
@@ -39,6 +41,7 @@ class InputViewController: UIViewController {
             self.task.contents = self.contentsTextView.text
             self.task.date = self.datePicker.date
             self.realm.add(self.task, update: .modified)
+            self.task.category = self.categoryTextField.text!
             
         }
         
@@ -59,28 +62,30 @@ class InputViewController: UIViewController {
             content.title = task.title
         }
         if task.contents == "" {
+            content.body = "(内容なし)"
+        } else {
             content.body = task.contents
         }
-        content.body = task = task.contents
+        content.sound = UNNotificationSound.default
         
         //ローカル通知が発動するtrigger(日付マッチ)を作成
         let calendar = Calendar.current
         let dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: task.date)
-        let trigget = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         
         //identifier, content, triggerからローカル通知を作成(identifierが同じだとローカル通知を上書き保存）
-        let request = UMNotificationRequest(identifier: String(task.id), content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: String(task.id), content: content, trigger: trigger)
         
         //ローカル通知を登録
-        let center = UIUserNotificationCenter.current()
+        let center = UNUserNotificationCenter.current()
         center.add(request) { (error) in
-            print(error ??"ローカル通知登録 OK")
+            print(error ?? "ローカル通知登録 OK")
             //errorがnilならローカル通知の登録に成功したことを表示します
             //errorが存在すればerrorを表示します
         }
         
         //未通知のローカル通知一覧をログ出力
-        center.getPendingNotificationReqests { (repests: [UNNotificationRequest]) in
+        center.getPendingNotificationRequests { (requests: [UNNotificationRequest]) in
             for reqest in requests {
                 print("/-----------------")
                 print(reqest)
